@@ -1,0 +1,201 @@
+USE project;
+
+SELECT * FROM LOCATIONS;
+SELECT * FROM DEPARTMENTS;
+SELECT * FROM JOBS;
+SELECT * FROM EMPLOYEES;
+SELECT * FROM JOB_HISTORY;
+SELECT * FROM REGIONS;
+SELECT * FROM COUNTRIES;
+
+/************************** Display records in a ordered manner and deal with NULL values. **************************/
+
+-- List down employee full name in ascending order where commission_pct is not available
+SELECT CONCAT(first_name,' ',last_name) AS full_name FROM employees
+WHERE commission_pct IS NULL
+ORDER BY first_name ASC;
+
+/************************** Wildcard functions **************************/
+/* List down employee details where
+job id start with AD  and salary should be >10000 OR job id  as IT and salary <= 6000
+or Department name should be 'Purchasing', 'IT', 'Executive' and COMMISSION_PCT SHOULD BE 0
+and hire date should be after 1-JAN-2000 */
+
+SELECT * FROM employees e 
+JOIN departments d ON e.department_id=d.department_id
+WHERE (e.job_id LIKE '%AD%' AND e.salary> 10000)
+		OR  (e.job_id LIKE '%IT%' AND  e.salary<=6000)
+		OR (d.department_name IN ('Purchasing', 'IT', 'Executive') AND e.commission_pct = 0)
+        AND e.hire_date > 2000-01-01;
+
+
+
+/************************** Inner Join: display employee details. **************************/
+
+-- List manager id,fullname,department name, city 
+
+SELECT d.manager_id,
+		CONCAT (e.first_name,' ',e.last_name) AS full_name,
+        d.department_name,
+        l.city
+ FROM departments d
+ JOIN employees e ON d.manager_id=e.employee_id
+ JOIN locations l ON d.location_id=l.location_id
+ ORDER BY 1;
+
+/************************** Left Join **************************/
+
+-- List down all the department id,dept name along with employees working under it.
+SELECT d.department_id,d.department_name,e.employee_id,e.first_name,e.last_name FROM departments d
+LEFT JOIN employees e ON e.department_id=d.department_id
+ORDER BY 1;
+
+/************************** Right Join **************************/
+-- List down all the employees along with department details.
+SELECT e.employee_id,e.first_name,e.last_name,d.department_id,d.department_name FROM departments d
+RIGHT JOIN employees e ON e.department_id=d.department_id
+ORDER BY 1;
+
+/************************** Self Join **************************/
+
+-- SELF JOIN: display employee details along with manager details
+SELECT e1.employee_id,CONCAT(e1.first_name,' ',e1.last_name) AS emp_name,
+		e2.employee_id AS mngr_id,CONCAT(e2.first_name,' ',e2.last_name) AS mngr_name
+ FROM employees e1  JOIN employees e2 ON e1.manager_id=e2.employee_id
+ ORDER BY 1;
+ 
+ /**************************  Sub-query **************************/
+ 
+-- Find employee details who belongs to marketing department and has salary greater then or equal to 6000
+SELECT employee_id,CONCAT(first_name,' ',last_name) AS emp_name,email,salary FROM employees
+WHERE salary >= 6000 AND department_id IN ( SELECT department_id FROM departments
+												WHERE department_name LIKE '%marketing%')
+ORDER BY 1;                                     
+                 
+-- List down location details of country US      
+SELECT location_id,street_address,city,state_province FROM locations      
+WHERE country_id IS  NOT NULL AND  
+		country_id = (SELECT country_id FROM countries
+						WHERE country_id  ='US')
+ ORDER BY 1;                       
+                                                
+/**************************  Aggregate Function**************************/      
+           
+-- List down the employees who are getting more then average salary.
+SELECT employee_id,CONCAT(first_name,' ',last_name) AS emp_name,salary,
+		(SELECT ROUND(AVG(salary),2) FROM employees) AS avg_salary FROM employees
+        
+WHERE salary > (SELECT ROUND(AVG(salary),2) FROM employees)
+ORDER BY 1;
+
+-- Find maximum salary,minimum salary  and number of employees who are working in IT department and hired after 29-Nov-1990
+SELECT MAX(salary) AS max_salary,MIN(salary) AS min_salary, COUNT(*) AS num_of_it_employees FROM employees
+WHERE department_id = (SELECT department_id FROM departments
+						WHERE department_name ='IT')
+      AND hire_date > 1990-11-29;                  
+      
+-- Calclate Avg tenure of terminated employees
+SELECT  ROUND(AVG(datediff(end_date,start_date) / 365 ),0) AS avg_tenure_of_terminated_employees FROM job_history;
+                                
+ /************************** Group By **************************/     
+ 
+-- Show department wise number of employees, maximum salary      
+SELECT d.department_name,COUNT(*) AS emp_count,MAX(e.salary) as max_salary FROM employees e
+JOIN departments d ON e.department_id=d.department_id
+GROUP BY 1
+ORDER BY 1;
+
+
+-- Show number of employees working under each manager along with manager's employee id
+SELECT e.manager_id,
+		CONCAT(m.first_name,' ',m.last_name) as manager_name,
+        COUNT(*) emp_under_mngr
+FROM employees e JOIN employees m ON e.manager_id=m.employee_id
+WHERE e.manager_id IS NOT NULL
+GROUP BY 1,2
+ORDER BY 1;
+
+-- Citywise breakdown of employees
+SELECT l.city,COUNT(*) AS emp_count FROM employees e
+JOIN departments d ON e.department_id=d.department_id
+JOIN locations l ON d.location_id=l.location_id
+GROUP BY 1
+ORDER BY 1;
+
+-- Breakdwon of employees based on hiring year where hirings are greater than or equal to 10
+SELECT DISTINCT(YEAR(hire_date)) AS Year_of_hiring , COUNT(*) AS emp_count
+FROM employees
+GROUP BY 1
+HAVING emp_count >= 10
+ORDER BY 1;
+
+/**************************  CASE STATEMENT **************************/
+
+-- Categorize employees based on hire date
+/*
+1. before 1990
+2. between 1990 to 1995
+3. between 1995 to 2000
+4. after 90s
+*/
+SELECT 
+		CASE WHEN YEAR(hire_date) < 1990 THEN 'Before 1990'
+			 WHEN YEAR(hire_date) BETWEEN 1990 AND 1995 THEN '1990-1995'
+             WHEN YEAR(hire_date) BETWEEN 1996 and 2000 THEN '1996-2000'
+             ELSE 'After 90s'
+        END AS year_group, COUNT(*) AS emp_count 
+ FROM employees
+ GROUP BY 1;
+             
+-- Display emp id,emp full name and assign commission category to each exclude null values
+ /* upto 0.20 low
+    upto 0.35 medium
+    above 0.35 high*/             
+SELECT employee_id,CONCAT(first_name,' ',last_name) AS full_name,
+		CASE WHEN commission_pct <= 0.20 THEN 'Low'
+			 WHEN commission_pct <=0.35 THEN 'Medium'
+             ELSE 'High' 
+        END AS commssion_category      
+FROM employees
+WHERE commission_pct IS NOT NUll
+ORDER BY 1;
+
+/**************************  CTE **************************/
+
+/*Find all the departments where the total salary of all employee in that department
+ is more than the average of total salary of all employees in the database. */
+ 
+WITH avg_cte AS
+( SELECT d.department_name,ROUND(SUM(e.salary),0)AS dept_avg_salary 
+  FROM departments d
+ JOIN employees e ON e.department_id=d.department_id
+ GROUP BY 1)
+ SELECT  * FROM avg_cte
+ WHERE dept_avg_salary > (SELECT ROUND(AVG(salary),0) FROM employees); 
+ 
+ -- Fetch employee record with third MAX salary using cte 
+ WITH salary_rank_cte AS (
+ SELECT employee_id,CONCAT(first_name,' ',last_name) AS full_name,salary,
+		DENSE_RANK() OVER(ORDER BY salary DESC) AS sal_rank
+  FROM employees )
+    SELECT employee_id,full_name,salary FROM salary_rank_cte
+    WHERE sal_rank = 3 ;
+
+/************************** Window functions **************************/ 
+   
+/* Add a new field to uniquely identify employyes based on hire date,
+	earliest employee hired being first further orderr by empid */
+SELECT ROW_NUMBER() OVER(ORDER BY hire_date ASC,employee_id ASC) AS 'index',
+       employee_id,first_name,last_name,email,hire_date 
+FROM employees;
+
+-- Department wise details of employees who are getting lowest salary.
+WITH dpt_sal_cte AS (
+SELECT department_id,employee_id,salary ,RANK() OVER(PARTITION BY department_id ORDER BY salary ASC) AS ranking
+FROM employees
+WHERE department_id IS NOT NULL)
+SELECT dpt_sal_cte.employee_id,CONCAT(e.first_name,' ',e.last_name) AS full_name,d.department_name,dpt_sal_cte.salary
+FROM dpt_sal_cte 
+JOIN employees e ON  dpt_sal_cte.employee_id=e.employee_id
+JOIN departments d ON dpt_sal_cte.department_id=d.department_id
+WHERE dpt_sal_cte.ranking=1;
