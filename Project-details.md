@@ -14,14 +14,14 @@ This is an employee dataset containing employee's department details,job locatio
 By crafting intricate SQL queries, we aim to unveil the story hidden in the data, providing valuable insights that can inform decision-making processes.
 
 # Various SQL functions used:
-📌Aggregate functions
-📌Wildcard functions
-📌Joins
-📌Subquery
-📌Groupby
-📌Case Statement
-📌Commom Table Expression CTE
-📌Window functions
+📌Aggregate functions   
+📌Wildcard functions  
+📌Joins  
+📌Subquery 
+📌Groupby  
+📌Case Statement  
+📌Commom Table Expression CTE   
+📌Window functions  
 
 
 
