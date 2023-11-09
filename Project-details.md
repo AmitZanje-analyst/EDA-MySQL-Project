@@ -17,7 +17,7 @@ By crafting intricate SQL queries, we aim to unveil the story hidden in the data
 📌Aggregate functions   
 📌Wildcard functions  
 📌Joins  
-📌Subquery    
+📌Subquery        
 📌Groupby  
 📌Case Statement  
 📌Commom Table Expression CTE   
