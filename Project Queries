@@ -8,7 +8,7 @@ SELECT * FROM JOB_HISTORY;
 SELECT * FROM REGIONS;
 SELECT * FROM COUNTRIES;
 
- # Display records in a ordered manner and deal with NULL values. **************************/
+/**************************Display records in a ordered manner and deal with NULL values. **************************/
 
 -- List down employee full name in ascending order where commission_pct is not available
 SELECT CONCAT(first_name,' ',last_name) AS full_name FROM employees
