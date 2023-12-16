@@ -8,7 +8,7 @@ Join me on this SQL EDA adventure as we transform raw data into actionable knowl
 
 
 # About Dataset
-This is an employee dataset containing employee's department details,job location details, personal details, jos historry and so on.
+This is an employee dataset containing employee's department details, job location details, personal details, job history and so on.
 
 # Objective
 By crafting intricate SQL queries, we aim to unveil the story hidden in the data, providing valuable insights that can inform decision-making processes.
